@@ -1,0 +1,177 @@
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Hello World</title>
+    <link rel="stylesheet" type="text/css" href="css/ext-all.css"/>
+
+    <!-- GC -->
+    <!-- LIBS -->
+    <script type="text/javascript" src="ext-base.js"></script>
+    <!-- ENDLIBS -->
+
+    <script type="text/javascript" src="ext-all.js"></script>
+    <script>
+      Ext.QuickTips.init();  // enable tooltips
+      Ext.onReady(function(){
+        let table = new Ext.XTemplate(
+          '<table border=1>',
+            '<tpl for="values">',
+              '<tr style="height: 20px;">',
+                '<tpl for="values">',
+                  '<td style="width: 40px;">{.}</td>',
+                '</tpl>',
+              '</tr>',
+            '</tpl>',
+          '</table>'
+        )
+        let data=[]
+
+        let win = new Ext.Window({
+          id:'win',
+          hidden:true,
+          closeAction:'hide',
+          title:'输入要插入表格的行列数',
+          width:250,
+          items:[
+            {
+              xtype:'form',
+              buttons:[
+                {
+                  text:'确定',
+                  handler:function(){
+                    let column = Ext.getCmp('column').getValue()
+                    let row =Ext.getCmp('row').getValue()
+                    if(column !== 0 && row !== 0){
+                      for(let i = 0 ; i < row; i++){
+                        let array = []
+                        data.push(array)
+                      }
+                      for(let j = 0;j< data.length;j++){
+                        for(let i = 0; i < column; i++){
+                          data[j][i] = j+''+i
+                        }
+                      }
+                      console.log(data)
+                      // Ext.getCmp('htmlEditor').data = data;
+                      // Ext.getCmp('htmlEditor').tpl = table;
+                      Ext.getCmp('htmlEditor').update(data)
+                      Ext.getCmp('win').hide();
+                    }else{
+                      Ext.Msg.alert('please input row and column')
+                    }
+                  }
+                }
+              ],
+              defaultType:'textfield',
+              items:[
+                {
+                  id:'column',
+                  fieldLabel:'column'
+                },
+                {
+                  id:'row',
+                  fieldLabel:'row'
+                }
+              ],
+             
+            }
+          ]
+        })
+        
+        let insert = function(){
+          Ext.getCmp('win').show()
+        }
+
+        let reset = function(scope){
+          Ext.getCmp('htmlEditor').setValue('')
+        }
+        let delayTask = new Ext.util.DelayedTask(function(){
+          Ext.getBody().unmask();
+        }) 
+        let reply = function(scope){
+          Ext.getBody().mask("正在提交");
+          delayTask.delay(500)
+        }
+        let toolbar = new Ext.Toolbar({
+          items:[
+            {
+              id:'reset',
+              text:'reset',
+              handler:reset.createDelegate(this)
+            },'->',
+            {
+              id:'insert',
+              text:'insert',
+              handler:insert.createDelegate(this)
+            }
+          ]
+        })
+        let menu = new Ext.menu.Menu({
+          items:[
+            {
+              text:'reset',
+              handler:reset.createDelegate(this)
+            },
+            {
+              text:'insert',
+              handler:insert.createDelegate(this)
+            }
+          ]
+        })
+        let htmlEditor = new Ext.form.HtmlEditor({
+          
+          id:'htmlEditor',
+          anchor:'100% 100%',
+          data:data,
+          tpl:table,
+          tplWriteMode :'insertAfter',
+        })
+        
+        new Ext.Panel({
+          renderTo:Ext.getBody(),
+          items:[
+            {
+              id:'editePanel',
+              xtype:'panel',
+              layout:'anchor',
+              items:[toolbar,htmlEditor],
+              bbar:[
+                '->',
+                {
+                  id:'reply',
+                  width:100,
+                  text:'reply',
+                  disabled:true,
+                  handler:reply.createDelegate(this)
+                }
+              ]
+            },
+          ],
+        })
+        Ext.get(document).on('contextmenu',function(e){
+          e.preventDefault();
+	        menu.showAt(e.getXY());
+        })
+        var updateClock = function(){
+          if(!Ext.isEmpty(Ext.getCmp('htmlEditor').getValue())){
+            Ext.getCmp('reply').setDisabled(false);
+          }else {
+            Ext.getCmp('reply').setDisabled(true);
+          }
+            
+        } 
+        var task = {
+            run: updateClock,
+            interval: 100 
+        }
+        var runner = new Ext.util.TaskRunner();
+        runner.start(task);
+      });           
+    </script>
+</head>
+<style>
+</style>
+<body id="docbody">
+    <div id='test'></div>
+</body>
+</html>
